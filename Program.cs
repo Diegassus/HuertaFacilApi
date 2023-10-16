@@ -32,6 +32,7 @@ builder.Services.AddAuthentication().AddJwtBearer(options =>{ // configuracion d
 });
 builder.Services.AddAuthorization(options =>{
     options.AddPolicy("Usuario", policy => {policy.RequireClaim(ClaimTypes.Role, "Usuario");});
+    options.AddPolicy("Correo",policy => {policy.RequireClaim(ClaimTypes.Email, "Correo");});
 });
 builder.Services.AddControllers();
 builder.Services.AddDbContext<DataContext>(opt => opt.UseMySql(
