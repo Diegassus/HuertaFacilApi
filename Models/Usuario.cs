@@ -7,4 +7,5 @@ public class Usuario{
     public bool? Hemisferio { get; set; }
     public bool Administrador { get; set; }
     public DateTime? Alta { get; set; }
+    
 }

@@ -12,7 +12,7 @@ public class Planta {
     public required int Semillado { get; set; }
     public required int Poda { get; set; }
     public required int TipoId { get; set; }
-    public Tipo? Categoria { get; set; }
+    public Tipo_Planta? Tipo { get; set; }
     public required int LuzId { get; set; }
     public Luz? Iluminacion { get; set; }
 }

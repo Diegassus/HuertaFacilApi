@@ -16,8 +16,8 @@ public class PlantasController : ControllerBase
     this._configuration = configuration;
   }
 
-  [HttpGet] // ponerle segridad de token
-  [Route("ListadoPrincipal")] // Obtener el listado de todas las plantas. si es posible crear infinite scroll
+  [HttpGet("ListadoPrincipal")] // ponerle segridad de token
+ // Obtener el listado de todas las plantas. si es posible crear infinite scroll
   public async Task<IActionResult> ListadoPrincipal()
   {
     List<PlantaListado> plantas = new List<PlantaListado>();
@@ -29,9 +29,10 @@ public class PlantasController : ControllerBase
       });
       return Ok(plantas);
     }
-    catch
+    catch (Exception ex)
     {
-      return BadRequest("Error al obtener las plantas");
+        Console.WriteLine(ex.ToString());
+        return BadRequest("Error al obtener las plantas");
     }
   }
 
@@ -62,8 +63,10 @@ public class PlantasController : ControllerBase
   {
     if(PlantaId == 0) return BadRequest("El id de la planta no es valido");
     try
-    {
-      var planta = await _context.Plantas.FirstOrDefaultAsync(p => p.Id == PlantaId);
+    { // crear un modelo de planta detalle vista para poder presentarlo apropiadamente (que haga JOINS)
+      var planta = await _context.Plantas.Include(p => p.Tipo)
+                    .Include(p => p.Iluminacion)
+                    .FirstOrDefaultAsync(p => p.Id == PlantaId);
       if (planta == null)
       {
         return BadRequest("Planta no encontrada");
@@ -77,7 +80,7 @@ public class PlantasController : ControllerBase
   }
   
   [HttpGet]
-  [Route("tip")]
+  [Route("tips")]
   public async Task<IActionResult> ObtenerTips(int PlantaId)
   {
     if(PlantaId == 0) return BadRequest("El id de la planta no es valido");
@@ -93,6 +96,136 @@ public class PlantasController : ControllerBase
     catch
     {
       return BadRequest("Ocurrio un problema al obtener la informacion de los tips de la planta");
+    }
+  }
+
+  [HttpGet("Rotaciones")] 
+  public async Task<IActionResult> Rotaciones (int PlantaId)
+  {
+    try
+    {
+      List<PlantaListado> plantas = _context.Rotaciones
+    .Where(rotacion => rotacion.Anterior == PlantaId)
+    .Select(rotacion => new PlantaListado(
+        rotacion.Planta.Id,
+        rotacion.Planta.Nombre ,
+         rotacion.Planta.Logo
+    ))
+    .ToList();
+      return Ok(plantas);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.ToString());
+        return BadRequest("Error al obtener las plantas");
+    }
+  }
+
+  [HttpGet("Contrarias")] 
+  public async Task<IActionResult> Contrarias (int PlantaId)
+  {
+    try
+    {
+      List<PlantaListado> plantas = _context.Contrarias.Include(p => p.Planta)
+    .Where(c => c.PlantaId == PlantaId)
+    .Select(rotacion => new PlantaListado(
+        rotacion.Planta.Id,
+        rotacion.Planta.Nombre ,
+         rotacion.Planta.Logo
+    ))
+    .ToList();
+      return Ok(plantas);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.ToString());
+        return BadRequest("Error al obtener las plantas");
+    }
+  }
+
+  [HttpGet("Bonificadores")] 
+  public async Task<IActionResult> Bonificadores (int PlantaId)
+  {
+    try
+    {
+      List<Biopreparados> bio = _context.Bonificadores.Include(b => b.Biopreparado)
+    .Where(b => b.PlantaId == PlantaId)
+    .Select(b => new Biopreparados{
+      Id = b.BiopreparadoId,
+      Foto = b.Biopreparado.Foto,
+      Descripcion = b.Biopreparado.Descripcion,
+      Nombre = b.Biopreparado.Nombre,
+      Ingredientes = b.Biopreparado.Ingredientes
+    })
+    .ToList();
+      return Ok(bio);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.ToString());
+        return BadRequest("Error al obtener los biopreparados");
+    }
+  }
+
+  [HttpGet("Biopreparados")] 
+  public async Task<IActionResult> Biopreparados (int AmenazaId)
+  {
+    try
+    {
+      List<Biopreparados> bio = _context.Curas.Include(b => b.Biopreparado)
+    .Where(b => b.AmenazaId == AmenazaId)
+    .Select(b => new Biopreparados{
+      Id = b.BiopreparadoId,
+      Foto = b.Biopreparado.Foto,
+      Descripcion = b.Biopreparado.Descripcion,
+      Nombre = b.Biopreparado.Nombre,
+      Ingredientes = b.Biopreparado.Ingredientes
+    })
+    .ToList();
+      return Ok(bio);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.ToString());
+        return BadRequest("Error al obtener los biopreparados");
+    }
+  }
+
+  [HttpGet("Amenazas")] 
+  public async Task<IActionResult> Amenazas (int PlantaId)
+  {
+    try
+    {
+      List<Amenazas> plagas = _context.Ataques.Include(b => b.Amenaza)
+    .Where(b => b.PlantaId == PlantaId)
+    .Select(b => new Amenazas{
+      Id = b.AmenazaId,
+      Foto = b.Amenaza.Foto,
+      Descripcion = b.Amenaza.Descripcion,
+      Nombre = b.Amenaza.Nombre,
+    })
+    .ToList();
+      return Ok(plagas);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.ToString());
+        return BadRequest("Error al obtener los biopreparados");
+    }
+  }
+
+  [HttpGet("Usos")] 
+  public async Task<IActionResult> Usos (int PlantaId)
+  {
+    try
+    {
+      List<Usos> usos = _context.Usos.Where(u => u.PlantaId == PlantaId).ToList();
+      return Ok(usos);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.ToString());
+        return BadRequest("Error al obtener las plantas");
     }
   }
 }
